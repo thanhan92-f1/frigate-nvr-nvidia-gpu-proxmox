@@ -1,0 +1,29 @@
+services:
+  frigate:
+    container_name: frigate-cctv
+    restart: unless-stopped
+    stop_grace_period: 30s
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt 
+    runtime: nvidia
+    shm_size: "1024mb"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - TZ=Asia/Manila
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+    volumes:
+      - ./config:/config
+      - /media/records:/media/frigate
+      - ./frigate.db:/config/frigate.db
+      - /etc/localtime:/etc/localtime:ro      #  ^f^p sync with host time
+      - /etc/timezone:/etc/timezone:ro        #  ^f^p sync with host timezone
+      - type: tmpfs # 1GB In-memory filesystem for recording segment storage
+        target: /tmp/cache
+        tmpfs:
+          size: 2000000000
+    ports:
+      - "8971:5000"
+      - "8554:8554" # RTSP feeds
